@@ -39,9 +39,16 @@ pwm = PWM(0x40, debug=False)
 # Set frequency to 60 Hz
 pwm.setPWMFreq(frequency)
 # ---- End Output Configuration ---- 
-
 while(True):
-	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_MIN);
-	time.sleep(1);
-	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_MAX);
-	time.sleep(1);
+
+    # Handle the exception for ctrl-c to stop the script
+    try:
+        pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_MIN);
+        time.sleep(1);
+        pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_MAX);
+        time.sleep(1);
+    except KeyboardInterrupt:
+        sys.exit()
+
+
+
