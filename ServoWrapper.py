@@ -39,11 +39,20 @@ Hex constants are prefixed with "0x"
 hex(0x40) = dec(64) = bin(01000000)
 ''' 
 PCA9685_DEFAULT_ADDRESS = 0x40
+frequency = 300
+period = 1.0/frequency
 
-frequency = 50
+NAVIO_RCOUTPUT_1 = 3
 # ---- End Module Setup ---- 
 
-# ---- Configure Outputs ----
+
+# ---- Set Outputs ----
+SERVO_deg1 = 1 #don't set this to zero
+SERVO_deg2 = 100
+# ---- End Set Outputs ----
+
+
+# ---- Convert Outputs ----
 '''
 A digital signal controls the PCA9685 which prepares an analog PWM wave
 for the Savox SC-1258TG servo.
@@ -52,22 +61,24 @@ The PCA9685 is controlled by I2C and each of the 16 drivers has 12-bit
 PWM output which is 4096 steps. The analog output wave can range from
 24Hz-1526Hz frequency with possible 0%-100% duty cycle.
 '''
-NAVIO_RCOUTPUT_1 = 3
-SERVO_MIN_ms = 1.250 # mS
-SERVO_MAX_ms = 1.750 # mS
+SERVO_MAX_deg = 100
 
-#convert mS to 0-4096 scale:
-SERVO_MIN = math.trunc((SERVO_MIN_ms * 4096.0) / (1000.0 / frequency) - 1)
-SERVO_MAX = math.trunc((SERVO_MAX_ms * 4096.0) / (1000.0 / frequency) - 1)
+#ABS_MIN_PW = 0.001 #S or 1000 uS correspond to 0 degrees and cw
+#ABS_NEUT_PW = 0.0015 #S or 1500 uS
+#SERVO_MAX_PW = 0.002 #S or 2000 uS correspond to 100 degrees and ccw
+
+#Convert degree percentage to 0-4096 scale:
+SERVO_move1 = math.trunc( ((SERVO_deg1/SERVO_MAX_deg) * 4096.0) -1)
+SERVO_move2 = math.trunc( ((SERVO_deg2/SERVO_MAX_deg) * 4096.0) -1)
 
 pwm = PWM(0x40, debug=False)
 
 # Set frequency to 50 Hz
 pwm.setPWMFreq(frequency)
-# ---- End Output Configuration ---- 
+# ---- End Convert Outputs ---- 
 
 while(True):
-	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_MIN);
+	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_move1);
 	time.sleep(1);
-	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_MAX);
+	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_move2);
 	time.sleep(1);
