@@ -14,14 +14,17 @@ Two descriptions of linux system GPIO interface
 =http://elinux.org/RPi_GPIO_Code_Samples#sysfs
 """
 # ---- Includes ---- 
-from Adafruit_PWM_Servo_Driver import PWM
+from navio.adafruit_PWM_servo_driver import PWM
 import time
 import math
 
 import sys
+import signal
 
-sys.path.append("..")
-from Navio import GPIO
+import navio.gpio
+import navio.util
+
+navio.util.check_apm()
 # ---- End Includes ---- 
 
 # ---- Setup Modules ----
@@ -30,7 +33,7 @@ Drive LOW the Output Enable pin of the PCA9685BS model HVQFN28
 The RPI2's gpio pin #27 is connected to the PCA pin "OE" #20
 By driving OE LOW outputs are activated
 '''
-pin = GPIO.Pin(27)
+pin = navio.gpio.Pin(27)
 pin.write(0)
 
 '''
@@ -46,10 +49,10 @@ NAVIO_RCOUTPUT_1 = 3
 # ---- End Module Setup ---- 
 
 
-# ---- Set Outputs ----
+# ---- Set Servo Degrees of Movement ----
 SERVO_deg1 = 1 #don't set this to zero
 SERVO_deg2 = 100
-# ---- End Set Outputs ----
+# ---- End Set Servo DOM ----
 
 
 # ---- Convert Outputs ----
@@ -78,7 +81,10 @@ pwm.setPWMFreq(frequency)
 # ---- End Convert Outputs ---- 
 
 while(True):
-	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_move1);
-	time.sleep(1);
-	pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_move2);
-	time.sleep(1);
+	try:
+		pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_move1);
+		time.sleep(1);
+		pwm.setPWM(NAVIO_RCOUTPUT_1, 0, SERVO_move2);
+		time.sleep(1);
+	except KeyboardInterrupt:
+		sys.exit()
