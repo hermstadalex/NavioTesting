@@ -23,7 +23,7 @@ navio.util.check_apm()
 
 # ---- Setup Modules ---- 
 #drive Output Enable in PCA low
-pin = GPIO.Pin(27)
+pin = navio.gpio.Pin(27)
 pin.write(0)
 
 PCA9685_DEFAULT_ADDRESS = 0x40
