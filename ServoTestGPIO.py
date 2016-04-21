@@ -6,14 +6,19 @@ Requirements: Adafruit I2C and PCA9685 PWM generator drivers
 Use: Connect a PWM input device to the Navio+ servo rail then run "sudo python Servo1.py"
 """
 # ---- Includes ---- 
-from Adafruit_PWM_Servo_Driver import PWM
+from navio.adafruit_pwm_servo_driver import PWM
 import time
 import math
 
 import sys
+import signal
 
-sys.path.append("..")
-from Navio import GPIO
+import navio.gpio
+import navio.util
+
+navio.util.check_apm()
+
+
 # ---- End Includes ---- 
 
 # ---- Setup Modules ---- 
