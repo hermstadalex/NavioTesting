@@ -3,7 +3,7 @@ Robotritons testing version of Emlid Servo.py example
 
 Purpose: Control the Servo machines connected to PCA9685BS ic onboard of Navio shield for Raspberry Pi
 Requirements: Adafruit I2C and PCA9685 PWM generator drivers
-Use: Connect a PWM input device to the Navio+ servo rail then run "sudo python Servo1.py"
+Use: Connect a PWM input device to the Navio+ servo rail then run "sudo python ServoWrapper.py"
 
 Resources:
 PCA9685 Datasheet= http://www.nxp.com/documents/data_sheet/PCA9685.pdf
