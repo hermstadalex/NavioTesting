@@ -82,10 +82,31 @@ pwm.setPWMFreq(frequency)
 
 # ---- End Set & Convert Outputs ----
 
+
+# Below at T = 0.0017 is the neutral, corresponding to about 1.5ms
+# Need to change code below to some sort of initialization sequence:
+Motor_move_start = math.trunc((4096.0 * 0.001700 * frequency) -1)
+Motor_move_start2 = math.trunc((4096.0 * 0.001750 * frequency) -1)
+Motor_move_start3 = math.trunc((4096.0 * 0.001550 * frequency) -1)
+
+#pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start);
+#time.sleep(10);
+# End of initialization sequence
+
 while(True):
 	try:
-		pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move1);
-		time.sleep(5);
+		pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start);
+		time.sleep(2);
+		pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start2);
+		time.sleep(2);
+                pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start);
+                time.sleep(2);
+		pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start3);
+                time.sleep(2);
+                pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start);
+                time.sleep(2);
+                pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move_start3);
+                time.sleep(2);
 		#pwm.setPWM(NAVIO_RCOUTPUT_3, 0, Motor_move2);
 		#time.sleep(5);
 	except KeyboardInterrupt:
