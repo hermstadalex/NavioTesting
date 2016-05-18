@@ -13,6 +13,7 @@ https://shahriar.svbtle.com/importing-star-in-python
 from GPSBackEnd import *
 
 ubl = U_blox()
+#print type(ubl)
 for ind in range(0, 10):
 	ubl.enable_posllh()
 while(1):

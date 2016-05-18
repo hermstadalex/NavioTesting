@@ -105,7 +105,7 @@ class U_blox:
 				self.counter1 = 0
 				self.state = waiting_header
 				self.curr_mess.msg_length = 0
-				if((ubl.chk_a == ubl.accepted_chk_a) & (ubl.chk_b == ubl.accepted_chk_b)):
+				if((self.chk_a == self.accepted_chk_a) & (self.chk_b == self.accepted_chk_b)):
 					self.mess_queue.put(copy.deepcopy(self.curr_mess))
 					self.curr_mess.clear()
 				else:
