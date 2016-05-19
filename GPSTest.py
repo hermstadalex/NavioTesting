@@ -15,9 +15,9 @@ from GPSBackEnd import *
 ubl = U_blox()
 #print type(ubl)
 for ind in range(0, 10):
-	ubl.enable_posllh()
+	ubl.enable_posstatus()
 while(1):
-	buffer = ubl.bus.xfer2([200])
+	buffer = ubl.bus.xfer2([100])
 	for byt in buffer:
 		ubl.scan_ubx(byt)
 		if(ubl.mess_queue.empty() != True):
