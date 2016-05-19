@@ -17,7 +17,7 @@ ubl = U_blox()
 for ind in range(0, 10):
 	ubl.enable_posllh()
 while(1):
-	buffer = ubl.bus.xfer2([100])
+	buffer = ubl.bus.xfer2([200])
 	for byt in buffer:
 		ubl.scan_ubx(byt)
 		if(ubl.mess_queue.empty() != True):
