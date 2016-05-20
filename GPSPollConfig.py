@@ -1,0 +1,41 @@
+"""
+Robotritons testing version of steering controls.
+Based on iterations of the Emlid Servo.py example.
+
+Purpose: 
+Requirements:
+Use: 
+
+Resources:
+https://shahriar.svbtle.com/importing-star-in-python
+"""
+import time
+from GPSConfigBackEnd import *
+
+ubl = U_blox()
+mess_CFG_PRT_IO = [0xb5,0x62,0x06,0x00,0x01,0x00,0x04,0x0b,0x25]
+mess_CFG_MSG1 = [0xb5,0x62,0x06,0x01,0x02,0x00,0x01,0x02,0x0c,0x35]#this is for a NavPosllh
+mess_CFG_MSG2 = [0xb5,0x62,0x06,0x01,0x02,0x00,0x01,0x03,0x0d,0x36]#this is for a NavStatus
+mess_CFG_MSG8D = [0xb5,0x62,0x06,0x01,0x08,0x00,0x01,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x12,0xb9]#this is to disable a NavPosllh
+mess_CFG_MSG8E = [0xb5,0x62,0x06,0x01,0x08,0x00,0x01,0x02,0x00,0x00,0x00,0x00,0x01,0x00,0x13,0xbb]#this is to re-enable a NavPosllh
+messGet_CFG_PRT_SPI = [0xb5,0x62,0x06,0x00,0x14,0x00,0x04, "19more","chka","chkb"]
+
+#print type(ubl)
+for ind in range(0, 10):
+	#ubl.enable_posstatus()
+	#ubl.enable_posllh()
+	ubl.bus.xfer2(mess_CFG_MSG8E)
+	a=1
+while(1):
+	#buffer = ubl.bus.xfer2(mess_CFG_MSG1)
+	#buffer = ubl.bus.xfer2(mess_CFG_PRT_IO)
+	buffer = ubl.bus.xfer2([200])
+	#time.sleep(0.3)
+	#print "new buffer \n"
+	for byt in buffer:
+		#print byt,"\n"
+		ubl.scan_ubx(byt)
+		if(ubl.mess_queue.empty() != True):
+			msg = ubl.parse_ubx()
+			if (msg != None): print(msg)
+
