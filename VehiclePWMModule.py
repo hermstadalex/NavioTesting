@@ -24,6 +24,7 @@ http://aeroquad.com/showthread.php?5502-Which-PWM-frequency-do-I-use-to-control-
 # ---- Includes ---- 
 from navio.adafruit_pwm_servo_driver import PWM
 import math
+import time
 
 import sys
 import signal
@@ -86,8 +87,7 @@ class vehiclePWM:
 		self.PWM_Range = self.PWM_MaxWidth - self.PWM_MinWidth
 		self.PWM_Stop = 0.001700 #T = 0.0017 is the neutral, corresponding to about 1.5ms
 		self.Motor_Range = 100.0 #Define motor max speed
-		self.PreviousPWM = 0
-		self.CurrentPWM = 0
+		self.PreviousSpeed = 0
 # ---- End PWM Constants ----
 
 # ---- Servo Outputs ----
@@ -116,15 +116,36 @@ class vehiclePWM:
 #---- End Servo Outputs ----
 
 #---- ESC Outputs ----
-	def accel(self, Motor_speed):
-		# Need to change the code below to some sort of initialization sequence:
-		#Motor_move_start = math.trunc((4096.0 * 0.001700 * frequency) -1) #T = 0.0017 is the neutral, corresponding to about 1.5ms
-		#Motor_move_start2 = math.trunc((4096.0 * 0.001750 * frequency) -1) #Is fast
-		#Motor_move_start3 = math.trunc((4096.0 * 0.001550 * frequency) -1) #Is reverse
-		PWM_Width = self.PWM_Stop + (self.PWM_Range * (Motor_speed/self.Motor_Range))
-		print PWM_Width
+	def accel(self, speed):
+		if ((speed < 0) and (self.PreviousSpeed >= 0)):
+			self.stop()
+			time.sleep(0.5)
+			self.reverse(speed)
+			time.sleep(0.25)
+			self.stop()
+			time.sleep(0.25)
+			self.reverse(speed)
+		else:
+			if (speed < 0):
+				self.reverse(speed)
+			else:
+				self.forward(speed)
+		self.PreviousSpeed = speed
+
+	def forward(self,Motor_speed):
+		#PWM width 1.725ms minimum forward loaded
+		#PWM width 2.140ms maximum forward loaded
+		PWM_Width = 0.001725 + (0.000415 * (Motor_speed/self.Motor_Range))
 		Motor_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
 		self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
+
+	def reverse(self,Motor_speed):
+			#PWM width 1.590ms minimum reverse loaded
+                	#PWM width 1.300ms maximum reverse loaded
+                	PWM_Width = 0.00159 + (0.000290 * (Motor_speed/self.Motor_Range))
+                	Motor_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
+                	self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
+		
 
 	def stop(self):
 		stop = math.trunc((4096.0 * self.PWM_Stop * self.frequency) -1)
