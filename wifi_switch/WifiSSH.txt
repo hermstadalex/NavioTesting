@@ -1,0 +1,9 @@
+This ReadMe exists in the git repository as a reference.
+
+Information about this Rpi's wifi setup can be found at
+https://docs.google.com/document/d/11FU9uwQp99V03DOKvc_Uytfl4oaEhdTUP7wOdcsu2kk/edit?usp=sharing
+All wifi boot preferences can be edited at "/etc/network/interfaces"
+All wifi ssid preferences can be edited at "/etc/wpa_supplicant/wpa_supplicant.conf"
+
+Updates:
+(May 23, 2016) Removed UCSDProtected from wpa_supplicant

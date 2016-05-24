@@ -168,7 +168,7 @@ class NavStatusMsg:
 		return 'Current GPS status:\ngpsFixOk: {}\ngps Fix status: {}'.format(self.fixOk & 0x01, Status)
 		
 	def GPSStatus(self):
-		status = ['fStatus':0,'fOk':0]
+		status = {'fStatus':0,'fOk':0}
 		status['fStatus'] = self.fixStatus
 		#0 = no fix
 		#1 = dead reckoning only
@@ -201,9 +201,9 @@ class NavPosllhMsg:
 		
 	def GPSPosition(self):
 		#Prepares and returns a dictionary holding gps position accuracy, lat, lon, and height
-		position = ['hAcc':0, 'lon':0, 'lat':0, 'hEll':0]
+		position = {'hAcc':0, 'lon':0, 'lat':0, 'hEll':0}
 		position['hAcc'] = self.horAcc/1000.0
 		position['lon'] = self.lon/10000000.0
 		position['lat'] = self.lat/10000000.0
-		position['hEll'] = self.1000.0
+		position['hEll'] = self.heightEll/1000.0
 		return position

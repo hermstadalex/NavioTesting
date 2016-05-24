@@ -6,4 +6,18 @@ Brought wifi back up trying again to connect to hot4pieBrought wifi downError fo
     invalid argument "raspberry123".
 Tried to connect to hot4pieessid: Host name lookup failure
 ifconfig: `--help' gives usage information.
+Brought wifi back up trying again to connect to hot4pieBrought wifi downError for wireless request "Set Encode" (8B2A) :
+    invalid argument "raspberry123".
+Tried to connect to hot4pieessid: Host name lookup failure
+ifconfig: `--help' gives usage information.
+Brought wifi back up trying again to connect to hot4pieBrought wifi downError for wireless request "Set Encode" (8B2A) :
+    invalid argument "raspberry123".
+Tried to connect to hot4pieessid: Host name lookup failure
+ifconfig: `--help' gives usage information.
+Brought wifi back up trying again to connect to hot4pieBrought wifi down
+Error for wireless request "Set Encode" (8B2A) :
+    invalid argument "raspberry123".
+Tried to connect to hot4pie
+essid: Host name lookup failure
+ifconfig: `--help' gives usage information.
 Brought wifi back up trying again to connect to hot4pie
