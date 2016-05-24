@@ -118,24 +118,29 @@ class U_blox:
 	def parse_ubx(self):
 		curr_values = [0,0,0,0,0,0,0]
 		curr_mess = self.mess_queue.get(False)
+		
+		#If the buffer held a NAVposllh message
 		if((curr_mess.msg_class  == 0x01) & (curr_mess.msg_id == 0x02)):
 			msg = NavPosllhMsg()
 			curr_values = struct.unpack("<IiiiiII", str(bytearray(curr_mess.msg_payload)))
-			msg.itow = curr_values[0]
+			msg.itow = curr_values[0]#Assign the current values into the msg object's parameters
 			msg.lon = curr_values[1]
 			msg.lat = curr_values[2]
 			msg.heightEll = curr_values[3]
 			msg.heightSea = curr_values[4]
 			msg.horAcc = curr_values[5]
 			msg.verAcc = curr_values[6]
-			return msg
-
+			#return msg
+			return msg.GPSPosition()
+		
+		#If the buffer held a NAVstatus message
 		if((curr_mess.msg_class == 0x01) & (curr_mess.msg_id == 0x03)):
 			msg = NavStatusMsg()
 			msg.fixStatus = curr_mess.msg_payload[4]
 			msg.fixOk = curr_mess.msg_payload[5]
-			return msg
-
+			#return msg
+			return msg.GPSStatus()
+		'''
 		if((curr_mess.msg_class == 0x06) & (curr_mess.msg_id == 0x00)):
 			msg = "Found a CFG-PRT I/O message response"
 			return msg
@@ -143,7 +148,7 @@ class U_blox:
 		if((curr_mess.msg_class == 0x06) & (curr_mess.msg_id == 0x01)):
 			msg = "Found a CFG-MSG poll response"
 			return msg
-
+		'''
 		return None
 
 class NavStatusMsg:
@@ -161,6 +166,17 @@ class NavStatusMsg:
 		elif (self.fixStatus == 0x04): Status = "GPS + dead reckoning combined\n"
 		elif (self.fixStatus == 0x05): Status = "Time only fix\n"
 		return 'Current GPS status:\ngpsFixOk: {}\ngps Fix status: {}'.format(self.fixOk & 0x01, Status)
+		
+	def GPSStatus(self):
+		status = ['fStatus':0,'fOk':0]
+		status['fStatus'] = self.fixStatus
+		#0 = no fix
+		#1 = dead reckoning only
+		#2 = 2D-fix
+		#3 = 3D-fix
+		#4 = GPS + dead reckoning combined
+		#5 = Time only fix
+		return status
 
 class NavPosllhMsg:
 
@@ -182,4 +198,12 @@ class NavPosllhMsg:
 		horAcc = "Horizontal Accuracy Estateimate: %.3f m" % (self.horAcc/1000.0)
 		verAcc = "Vertical Accuracy Estateimate: %.3f m" % (self.verAcc/1000.0)
 		return '{}\n{}\n{}\n{}\n{}\n{}\n{}\n'.format(itow, lon, lat, heightEll, heightSea, horAcc, verAcc)
-
+		
+	def GPSPosition(self):
+		#Prepares and returns a dictionary holding gps position accuracy, lat, lon, and height
+		position = ['hAcc':0, 'lon':0, 'lat':0, 'hEll':0]
+		position['hAcc'] = self.horAcc/1000.0
+		position['lon'] = self.lon/10000000.0
+		position['lat'] = self.lat/10000000.0
+		position['hEll'] = self.1000.0
+		return position
