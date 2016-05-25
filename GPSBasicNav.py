@@ -2,10 +2,13 @@
 Robotritons testing version of gps navigation.
 
 Purpose: Use reliable GPS data to navigate the vehicle
-Requirements: 
-Use: 
+Requirements: A vehicle with at least one speed controller and one servo, and one Ublox NEO-M8N Standard Precision GNSS Module. The python modules sys, time, GPSConfigBackEnd, and VehiclePWMModule 
+Use: Instantiate esc, servo, and ublox objects then use their included methods as well as those defined here in order to wait until usable GPS data is secured.
+	Instantiate objects for an esc using vehiclePWM("esc"), a servo using vehiclePWM("servo"), and a ublox using U_blox()
 
 Resources:
+https://docs.emlid.com/navio/Navio-dev/read-gps-data/
+https://shahriar.svbtle.com/importing-star-in-python
 """
 import sys
 import time
@@ -35,23 +38,17 @@ def GPSNavInit():
 	for x in range(0, 10):
 		ubl.bus.xfer2(CFGmsg8_NAVstatus_yes)
 	
-	#I made the NavStatusMessage method and parse_ubx method of ubl also return a value (in addition to text).
+	#note: the NavStatusMessage method and parse_ubx method of ubl also return a value (in addition to text).
+	#note: I made the GPSfetch() module to package the repetative set of commands to check a buffer from the Ublox.
 	#Wait until we have a confirmed GPS fix
-	while (True):
-		buffer = ubl.bus.xfer2([100])
-		for byte in buffer:
-			ubl.scan_ubx(byte)
-			if(ubl.mess_queue.empty() != True):
-				fix = ubl.parse_ubx()
-				if (fix != None):
-					print 'fix', fix, '\n'
-					if((fix['fStatus'] == 2) or (fix['fStatus'] == 3) or (fix['fStatus'] == 4)):
-						print 'good fix', '\n'
-						break
-		else:
-			continue
-		break
-	#To fix this nested while:for: loop I should make this a function and use return in the innermost loop allowing me to exit to the top
+	goodFPSfix = False
+	while not (goodGPSfix):
+		GPSfix = ubl.GPSfetch()
+		if (GPSfix):
+			#print 'fix', fix, '\n'
+			if((GPSfix['fStatus'] == 2) or (GPSfix['fStatus'] == 3) or (GPSfix['fStatus'] == 4)):
+				goodGPSfix = True
+	#print 'goodFix', '\n'
 
 	#After confirmed fix, disable Navstatus messages
 	CFGmsg8_NAVstatus_no = [0xb5,0x62,0x06,0x01,0x08,0x00,0x01,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x13,0xc0]#Disable Ublox from publishing a NAVstatus
@@ -77,38 +74,25 @@ def NAVposllhUpdate():
 		ubl.bus.xfer2(msg)
 
 	#Move forward and back slowly until established valuable horizontal accuraccy
-	while (True):
-		buffer = ubl.bus.xfer2([100])
-		for byte in buffer:
-			vehicle_esc.accel(3) #Move back if it wasn't accurate enough
-			ubl.scan_ubx(byte)
-			if(ubl.mess_queue.empty() != True):
-				pos = ubl.parse_ubx()
-				if (pos != None):
-					print 'pos',pos,'\n'
-					print(msg)
-					print 'hAcc',pos['hAcc'],'\n'
-					if(pos['hAcc'] <= 10):
-						print 'good acc \n'
-						break
-		else:
-			vehicle_esc.accel(-10) #Move back if it wasn't accurate enough
-			continue
-		break
-#ERROR Once we include both accel(-10) and accel(3) in either order in this above loop, accel somehow enters an infinite loop
-#Also ERROR making the accel statements go in the same direction but different speeds isn't updating either direction and stops backwards
-	print 'passed acc \n'
+	goodGPSacc = False
+	while not (goodGPSacc):
+		vehicle_esc.accel(3) #Move back if it wasn't accurate enough
+		acc = ubl.GPSfetch()
+		if (acc):
+			#print 'acc', acc, '\n'
+			if (acc['hAcc'] <= 10):
+				goodGPSacc = True
+		vehicle_esc.accel(-10) #Move back if it wasn't accurate enough
+	#print 'goodGPSacc', '\n'
+
+#Fixed accel from entering an infinite loop. Now calling accel() multiple times and passing different signed arguments should work.
+#Potential ERROR: making the accel statements go in the same direction but different speeds isn't updating either direction and stops backwards
 
 	#Stop shennanigans now that we've got an accurate gps readings
 	vehicle_esc.stop()
 	
 	#Grab the current gps location
-	buffer = ubl.bus.xfer2([100])
-	for byte in buffer:
-		ubl.scan_ubx(byte)
-		if(ubl.mess_queue.empty() != True):
-			pos = ubl.parse_ubx()
-	
+	pos = ubl.GPSfetch()	
 	print pos, '\n'
 	#Know next location
 	#calculate next waypoint heading
@@ -118,25 +102,28 @@ def NAVposllhUpdate():
 
 vehicle_servo = VehiclePWMModule.vehiclePWM("servo")
 vehicle_esc = VehiclePWMModule.vehiclePWM("esc")
-x=1
-while(True):
+try:
+	vehicle_esc.stop()
+	vehicle_servo.rest()
+	vehicle_servo.center()
+	'''
+	Watch out for running GPSNavInit a second time when only
+	NavPosllh messages are enabled because "fix" will return
+	a NavPosllh dictionary but the GPSNavInit expects a NavStatus dictionary with the key "fStatus"
+	'''	
+	GPSNavInit()
+	print 'once'
 	try:
-		while (x):
-			vehicle_esc.stop()
-			vehicle_servo.rest()
-			vehicle_servo.center()
-			#Watch out for running GPSNavInit a second time when only
-			#NavPosllh messages are enabled because "fix" will return
-			#a NavPosllh dictionary but the GPSNavInit expects a NavStatus dictionary with the key "fStatus"
-			GPSNavInit()
-			x = 0
-			print 'once'
 		#Testing and in progress
-		NAVposllhUpdate()
-		
-		#While (not at waypoint):
-		#	GPSNavUpdate()
+		for x in range(10):
+			NAVposllhUpdate()
+			#While (not at waypoint):
+				#GPSNavUpdate()
 	except KeyboardInterrupt:
+		vehicle_esc.stop()
+		vehicle_servo.rest()
+		sys.exit()
+except KeyboardInterrupt:
 		vehicle_esc.stop()
 		vehicle_servo.rest()
 		sys.exit()

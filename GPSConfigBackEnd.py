@@ -1,3 +1,18 @@
+"""
+Robotritons testing version of gps communications.
+Based on tbe Emlid GPS.py example
+
+Purpose: Define classes to handle communications with the Ublox NEO-M8N Standard Precision GNSS Module and modules to handle data retrieval. 
+Requirements: The python modules copy, Queue, spidev, math, struct, navio.util, and one one Ublox NEO-M8N Standard Precision GNSS Module.
+Use: First make an object of class U_blox(). Initialize communication by sending an I2C poll request "self.bus.xfer2(msg)" or using
+	the "enable_posllh(self):" method. Finally call GPSfetch() to probe the Ublox module for a message, then store its returned value for use.
+	The remaining methods control the actual handling of a message and ultimately customize the functionality of GPSfetch().
+
+Resources:
+https://www.u-blox.com/sites/default/files/NEO-M8N-FW3_DataSheet_%28UBX-15031086%29.pdf
+https://www.u-blox.com/sites/default/files/products/documents/u-blox8-M8_ReceiverDescrProtSpec_%28UBX-13003221%29_Public.pdf
+"""
+
 import copy
 import Queue
 import spidev
@@ -149,6 +164,17 @@ class U_blox:
 			msg = "Found a CFG-MSG poll response"
 			return msg
 		'''
+		return None
+
+	#A GPS single communication method
+	def GPSfetch(self):
+		buffer = self.bus.xfer2([100])
+		for byte in buffer:
+			self.scan_ubx(byte)
+			if(self.mess_queue.empty() != True):
+				data = self.parse_ubx()
+				if (data != None):
+					return data
 		return None
 
 class NavStatusMsg:

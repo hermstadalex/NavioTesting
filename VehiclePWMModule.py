@@ -6,6 +6,7 @@ Purpose: Manage the PCA9685 to generate PWM signals output to the Savox SC-1258T
 Requirements: Adafruit I2C and PCA9685 PWM generator drivers.
 Use: Connect the Savox Servo and Xerun Esc to the Navio+ servo rail. Include this module in any python script. Create an object from the "vehiclePWM" class. Control it using the available methods.
 Updates:
+- May 24, 2016 changed variable PreviousSpeed to a class attribute instead of an object variable. This corrects flow control in method accel()
 - May 21, 2016 all methods now respond to keyboard interrupts by relaxing the servo!
 
 Resources:
@@ -20,6 +21,10 @@ Resources ESC Specific:
 http://www.societyofrobots.com/robotforum/index.php?topic=4299.0
 http://robots.dacloughb.com/project-2/esc-calibration-programming/ (edited)
 http://aeroquad.com/showthread.php?5502-Which-PWM-frequency-do-I-use-to-control-my-ESC (edited)
+
+Resources Syntax Specific:
+http://stackoverflow.com/questions/21402177/methods-to-link-common-class-attributes-between-objects-not-inheritance
+http://stackoverflow.com/questions/68645/static-class-variables-in-python/68672#68672
 """
 # ---- Includes ---- 
 from navio.adafruit_pwm_servo_driver import PWM
@@ -36,6 +41,11 @@ navio.util.check_apm()
 # ---- End Includes ---- 
 
 class vehiclePWM:
+	
+	#Notice: these variables outside of a method are class attributes. Their values are shared by all object instances of this class.
+	PreviousSpeed = 0
+	
+	#Notice: the variables inside the __init__ method are created privately for each object.
 	def __init__(self,hdwr):
 # ---- Setup PWM Generator ----
 		self.pin = navio.gpio.Pin(27)#Enable OE pin output.
@@ -87,7 +97,6 @@ class vehiclePWM:
 		self.PWM_Range = self.PWM_MaxWidth - self.PWM_MinWidth
 		self.PWM_Stop = 0.001700 #T = 0.0017 is the neutral, corresponding to about 1.5ms
 		self.Motor_Range = 100.0 #Define motor max speed
-		self.PreviousSpeed = 0
 # ---- End PWM Constants ----
 
 # ---- Servo Outputs ----
@@ -117,20 +126,20 @@ class vehiclePWM:
 
 #---- ESC Outputs ----
 	def accel(self, speed):
-		if ((speed < 0) and (self.PreviousSpeed >= 0)):
-			self.stop()
-			time.sleep(0.5)
-			self.reverse(speed)
-			time.sleep(0.25)
-			self.stop()
-			time.sleep(0.25)
-			self.reverse(speed)
-		else:
-			if (speed < 0):
+		if (speed < 0):
+			if (vehiclePWM.PreviousSpeed > 0):
+				self.stop()
+				time.sleep(0.5)
+				self.reverse(speed)
+				time.sleep(0.25)
+				self.stop()
+				time.sleep(0.25)
 				self.reverse(speed)
 			else:
-				self.forward(speed)
-		self.PreviousSpeed = speed
+				self.reverse(speed)
+		else:
+			self.forward(speed)
+		vehiclePWM.PreviousSpeed = speed
 
 	def forward(self,Motor_speed):
 		#PWM width 1.725ms minimum forward loaded
@@ -140,11 +149,11 @@ class vehiclePWM:
 		self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
 
 	def reverse(self,Motor_speed):
-			#PWM width 1.590ms minimum reverse loaded
-                	#PWM width 1.300ms maximum reverse loaded
-                	PWM_Width = 0.00159 + (0.000290 * (Motor_speed/self.Motor_Range))
-                	Motor_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
-                	self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
+		#PWM width 1.590ms minimum reverse loaded
+		#PWM width 1.300ms maximum reverse loaded
+		PWM_Width = 0.00159 + (0.000290 * (Motor_speed/self.Motor_Range))
+		Motor_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
+		self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
 		
 
 	def stop(self):
