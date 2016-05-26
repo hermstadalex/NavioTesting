@@ -4,12 +4,10 @@ vehicle_servo = VehiclePWMModule.vehiclePWM("servo")
 vehicle_esc = VehiclePWMModule.vehiclePWM("esc")
 
 
-while(True):
-	
-	vehicle_esc.stop()
-	time.sleep(2)
+while(True):	
+	#vehicle_esc.stop()
 	vehicle_esc.accel(1)#Forward
-	time.sleep(2)
+	time.sleep(1)
 	vehicle_esc.accel(-10)
-	time.sleep(2)
+	time.sleep(1)
 	

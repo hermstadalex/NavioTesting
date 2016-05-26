@@ -55,6 +55,7 @@ class U_blox:
 		self.chk_b=0
 		self.accepted_chk_a=0
 		self.accepted_chk_b=0
+		self.debug=False
 
 	def enable_posllh(self):
 		msg = [0xb5, 0x62, 0x06, 0x01, 0x03, 0x00, 0x01, 0x02, 0x01, 0x0e, 0x47]
@@ -145,7 +146,7 @@ class U_blox:
 			msg.heightSea = curr_values[4]
 			msg.horAcc = curr_values[5]
 			msg.verAcc = curr_values[6]
-			#return msg
+			if (self.debug == True): return msg
 			return msg.GPSPosition()
 		
 		#If the buffer held a NAVstatus message
@@ -153,7 +154,7 @@ class U_blox:
 			msg = NavStatusMsg()
 			msg.fixStatus = curr_mess.msg_payload[4]
 			msg.fixOk = curr_mess.msg_payload[5]
-			#return msg
+			if (self.debug == True): return msg
 			return msg.GPSStatus()
 		'''
 		if((curr_mess.msg_class == 0x06) & (curr_mess.msg_id == 0x00)):
@@ -167,14 +168,59 @@ class U_blox:
 		return None
 
 	#A GPS single communication method
-	def GPSfetch(self):
+	def GPSfetch(self,*args):
+		if (args):
+			return self.fetchSpecial()
 		buffer = self.bus.xfer2([100])
+		for byt in buffer:
+			self.scan_ubx(byt)
+			if(self.mess_queue.empty() != True):
+				data = self.parse_ubx()
+				if (data != None):
+					if(self.debug == True):
+						print(data)
+					else:
+						return data
+		return None
+
+		#if (args):
+		#	return self.fetchSpecial()
+		#else:
+#                buffer = self.bus.xfer2([100])
+#                	for byte in buffer:
+#              	        self.scan_ubx(byte)
+#			if(self.mess_queue.emtpy() != True):
+#				data = self.parse_ubx()
+#				if (data != None):
+#					if (self.debug == True):
+#						print(data)
+#					else:
+#						return data
+#		return None
+
+#PG 135
+#The UBX protocol is designed so that messages can be polled by sending the message required to the receiver
+#but without a payload (or with just a single parameter that identifies the poll request). The receiver then
+#responds with the same message with the payload populated
+#'posllh'
+#return self.GPSfetchInternal([0xb5, 0x62, 0x01, 0x02, 0x1c,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0xA6])
+#'status'
+#return self.GPSfetchInternal([0xb5, 0x62, 0x01, 0x03, 0x10,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x6D])
+
+	def fetchSpecial(self):
+		#msg = [0xb5, 0x62, 0x01, 0x03, 0x10,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x6D]
+		#msg = [0xb5, 0x62, 0x01, 0x02, 0x1c,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0xA6]
+		msg = [0xb5, 0x62, 0x06, 0x01, 0x03, 0x00, 0x01, 0x02, 0x01, 0x0e, 0x47]
+		buffer = self.bus.xfer2(msg)
 		for byte in buffer:
 			self.scan_ubx(byte)
 			if(self.mess_queue.empty() != True):
 				data = self.parse_ubx()
 				if (data != None):
-					return data
+					if (self.debug == True):
+						print(data)
+					else:
+						return data
 		return None
 
 class NavStatusMsg:
@@ -196,6 +242,7 @@ class NavStatusMsg:
 	def GPSStatus(self):
 		status = {'fStatus':0,'fOk':0}
 		status['fStatus'] = self.fixStatus
+		status['fOk'] = self.fixOk
 		#0 = no fix
 		#1 = dead reckoning only
 		#2 = 2D-fix

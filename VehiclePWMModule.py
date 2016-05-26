@@ -113,7 +113,7 @@ class vehiclePWM:
 			sys.exit()
 
 	def center(self):
-		PWM_Width = self.PWM_MinWidth + (self.PWM_Range * (75/self.SERVO_Range))		
+		PWM_Width = self.PWM_MinWidth + (self.PWM_Range * (81/self.SERVO_Range))		
 		SERVO_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
 		try:
 			self.pwm.setPWM(self.NAVIO_RCOUTPUT, 0, SERVO_move)
@@ -126,10 +126,12 @@ class vehiclePWM:
 
 #---- ESC Outputs ----
 	def accel(self, speed):
+		#print 'start: s%d, p%d' % (speed,vehiclePWM.PreviousSpeed)
 		if (speed < 0):
 			if (vehiclePWM.PreviousSpeed > 0):
 				self.stop()
 				time.sleep(0.5)
+				#print 'firstReverse'
 				self.reverse(speed)
 				time.sleep(0.25)
 				self.stop()
@@ -138,21 +140,31 @@ class vehiclePWM:
 			else:
 				self.reverse(speed)
 		else:
-			self.forward(speed)
+			if (vehiclePWM.PreviousSpeed <= 0):
+				self.stop()
+				time.sleep(0.5)
+				self.forward(speed)
+			else:
+				self.forward(speed)
 		vehiclePWM.PreviousSpeed = speed
+		#print 'end: s%d, p%d' % (speed,vehiclePWM.PreviousSpeed)
 
 	def forward(self,Motor_speed):
 		#PWM width 1.725ms minimum forward loaded
 		#PWM width 2.140ms maximum forward loaded
 		PWM_Width = 0.001725 + (0.000415 * (Motor_speed/self.Motor_Range))
+		#print 'PWM_Width %f' %PWM_Width
 		Motor_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
+		#print 'Motor_move %f' %Motor_move
 		self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
 
 	def reverse(self,Motor_speed):
 		#PWM width 1.590ms minimum reverse loaded
 		#PWM width 1.300ms maximum reverse loaded
 		PWM_Width = 0.00159 + (0.000290 * (Motor_speed/self.Motor_Range))
+		#print 'PWM_Width %f' %PWM_Width
 		Motor_move = math.trunc((4096.0 * PWM_Width * self.frequency) -1)
+		#print 'Motor_move %f' %Motor_move		
 		self.pwm.setPWM(self.NAVIO_RCOUTPUT,0,Motor_move)
 		
 
