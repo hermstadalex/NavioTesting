@@ -69,25 +69,6 @@ while(True):
 			z=z+1
 		print 'z %d' % z
 
-#I was able to reproduce the error of not getting any GPS data in the GPSBasicNav.py It has nothing to do with setting and changing CFG-Messages,
-#	although if I will never get a responce before 1 second after I enable a message type. Instead it has something to do with changing speeds
-#	around the ubl.GPSfetch(). Of course! I counted how long it takes the module "GPSfetch" to sucessfully find a NAVposllh message; about 1130 attempts!
-#	Thus when I set accel() to different signed speeds it executes the internal time.sleeps() commands which add up to a second. In other words this use of
-#	the accel() method will make each GPSfetch attempt take 1 second. I thought it was broken because it would take ~18 minutes to get a message!
-#	Maybe a solution is to immediately poll for that type of message? I've added this argument to the GPSfetch() method.
-#	Another solution is to start threading...
-#
-#	I made the fetchSpecial method to try and poll for the desired message, but no luck. It takes just as long to get a response as not polling.
-#	I can't use this method right now to expedite the message receival. It looks like it will take more effort than it is worth.
-#	Guess threading or ommiting time.sleep() is the only way.
-#
-#		if (x==8000): #Basically if we dont wait at least 1 second after Posllh is enabled, then we will not get any data
-#			comm(CFGmsg8_NAVposllh_no)
-#			comm(CFGmsg8_NAVstatus_yes)
-#			eTime = time.time()
-#			print 'elapsed %f' % (eTime-sTime)
-#			print 'here'
-
 	except KeyboardInterrupt:
 		vehicle_esc.stop()
 		vehicle_servo.rest()
